@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
@@ -15,8 +14,8 @@ import (
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	urlTempate := "https://example.com/it-automation-%s.tar.gz"
-	version := "1.6.1"
+	urlTempate := "https://github.com/exastro-suite/it-automation/releases/download/v%s/exastro-it-automation-%s.tar.gz"
+	version := "1.7.0"
 	tarGzDir := "./tmp/download"
 	untarDir := "./tmp/untar"
 
@@ -31,21 +30,19 @@ func main() {
 
 func downloadTarGzFile(urlTemplate string, version string, dir string) (tarGzFilePath string, err error) {
 
-	url := fmt.Sprintf(urlTemplate, version)
+	downloadUrl := fmt.Sprintf(urlTemplate, version, version)
 
-	request, err := http.NewRequest("GET", url, nil)
+	request, err := http.NewRequest("GET", downloadUrl, nil)
 	if err != nil {
 		log.Print(err)
 		return
 	}
 
-	insecure := true
+	tlsTransport := http.DefaultTransport.(*http.Transport).Clone()
+	tlsTransport.TLSClientConfig.InsecureSkipVerify = true
+
 	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: insecure,
-			},
-		},
+		Transport: tlsTransport,
 	}
 
 	response, err := client.Do(request)
